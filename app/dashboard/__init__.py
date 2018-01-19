@@ -42,6 +42,7 @@ DEFAULT_CONFIG_FILE = "/etc/linaro/kernelci-frontend.cfg"
 # configuration parameters.
 APP_ENVVAR = "FLASK_SETTINGS"
 
+CACHE_TIME = 10
 
 class RegexConverter(BaseConverter):
     """A regular expression URL converter."""
@@ -97,7 +98,7 @@ with app.app_context():
 
 def handle_ajax_get(req, endpoint, timeout=None):
     if validate_csrf(req.headers.get(CSRF_TOKEN_H, None)):
-        return backend.ajax_get(req, endpoint, timeout=timeout)
+        return backend.ajax_get(req, endpoint, timeout=CACHE_TIME)
     else:
         abort(403)
 
@@ -184,7 +185,7 @@ def static_html_proxy(path):
     defaults={"api": "TEST_CASE_API_ENDPOINT"}, methods=["GET"])
 def ajax_get(api):
     if validate_csrf(request.headers.get(CSRF_TOKEN_H, None)):
-        return backend.ajax_get(request, app_conf_get(api), timeout=60 * 20)
+        return backend.ajax_get(request, app_conf_get(api), timeout=CACHE_TIME)
     else:
         abort(403)
 
@@ -205,7 +206,7 @@ def ajax_count(collection=None):
         return backend.ajax_count_get(
             request, app_conf_get("COUNT_API_ENDPOINT"),
             collection,
-            timeout=60 * 60
+            timeout=CACHE_TIME
         )
     else:
         abort(403)
@@ -216,7 +217,7 @@ def ajax_batch():
     if validate_csrf(request.headers.get(CSRF_TOKEN_H, None)):
         if request.data:
             return backend.ajax_batch_post(
-                request, app_conf_get("BATCH_API_ENDPOINT"), timeout=60 * 20)
+                request, app_conf_get("BATCH_API_ENDPOINT"), timeout=CACHE_TIME)
         else:
             abort(400)
     else:
@@ -231,7 +232,7 @@ def ajax_bisect_call(doc_id=None):
             request,
             doc_id,
             app_conf_get("BISECT_API_ENDPOINT"),
-            timeout=60 * 60 * 4
+            timeout=CACHE_TIME
         )
     else:
         abort(403)
@@ -246,7 +247,7 @@ def ajax_build_logs(doc_id=None):
         else:
             api_path = app_conf_get("DEFCONFIG_LOGS_ENPOINT")
         return backend.ajax_logs(
-            request, api_path, doc_id=doc_id, timeout=60 * 60 * 3)
+            request, api_path, doc_id=doc_id, timeout=CACHE_TIME)
     else:
         abort(403)
 
@@ -260,7 +261,7 @@ def ajax_job_logs(doc_id=None):
         else:
             api_path = app_conf_get("JOB_LOGS_ENPOINT")
         return backend.ajax_logs(
-            request, api_path, doc_id=doc_id, timeout=60 * 60 * 3)
+            request, api_path, doc_id=doc_id, timeout=CACHE_TIME)
     else:
         abort(403)
 
@@ -270,7 +271,7 @@ def ajax_statistics():
     if validate_csrf(request.headers.get(CSRF_TOKEN_H, None)):
         return backend.ajax_get(
             request,
-            app_conf_get("STATISTICS_API_ENDPOINT"), timeout=60 * 60 * 1)
+            app_conf_get("STATISTICS_API_ENDPOINT"), timeout=CACHE_TIME)
     else:
         abort(403)
 
@@ -301,11 +302,11 @@ def ajax_compare(doc_id, api):
         api_path = app_conf_get(api)
         if request.method == "GET":
             return backend.ajax_get(
-                request, api_path, doc_id=doc_id, timeout=60 * 60 * 2)
+                request, api_path, doc_id=doc_id, timeout=CACHE_TIME)
         elif any([request.method == "POST", request.method == "OPTIONS"]):
             if request.data:
                 return backend.ajax_batch_post(
-                    request, api_path, timeout=60 * 60 * 2)
+                    request, api_path, timeout=CACHE_TIME)
             else:
                 abort(400)
         else:
@@ -322,6 +323,6 @@ def ajax_distinct(resource, field):
         if (resource == "suite"):
             resource = "test/suite"
         return backend.ajax_get(
-            request, "/%s/distinct" % resource, doc_id=field, timeout=60 * 30)
+            request, "/%s/distinct" % resource, doc_id=field, timeout=CACHE_TIME)
     else:
         abort(403)
